@@ -19,25 +19,28 @@
             margin-bottom: 10px;
             display: flex;
             flex-direction: row;
-            justify-content: center;
+            justify-content:space-evenly;
         }
         button {
-            width: 40px;
+            width: 60px;
+            height: 30px;
             margin-right: 5px;
             background-color: black;
             color:white;
             border-radius: 20px;
             font-weight: bold;
+            border: 0;
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
+    <div id="chart"></div>
+    <div id="loading">Загрузка данных...</div>
     <div id="buttons">
         <button onclick="changeTimeframe('1d')">1d</button>
         <button onclick="changeTimeframe('7d')">1w</button>
     </div>
-    <div id="loading">Загрузка данных...</div>
-    <div id="chart"></div>
     <script>
         let chart;
         let currentTimeframe = '1d'; // По умолчанию 1 день
@@ -102,6 +105,7 @@
                         format: 'dd MMM yyyy'
                     }
                 }
+                
             };
             chart = new ApexCharts(document.querySelector("#chart"), options);
             await chart.render();
