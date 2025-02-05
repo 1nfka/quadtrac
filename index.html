@@ -1,1 +1,132 @@
 
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        body{
+            display: flex;
+            flex-direction: column;
+        }
+        #loading {
+            display: none;
+            font-size: 20px;
+            color: blue;
+        }
+        #buttons {
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        button {
+            width: 40px;
+            margin-right: 5px;
+            background-color: black;
+            color:white;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="buttons">
+        <button onclick="changeTimeframe('1d')">1d</button>
+        <button onclick="changeTimeframe('7d')">1w</button>
+    </div>
+    <div id="loading">Загрузка данных...</div>
+    <div id="chart"></div>
+    <script>
+        let chart;
+        let currentTimeframe = '1d'; // По умолчанию 1 день
+        let isLoading = false; // Флаг загрузки
+
+        async function fetchData(timeframe) {
+            const daysMap = {
+                '1d': '1',
+                '7d': '7'
+            };
+
+            const days = daysMap[timeframe] || '1d';
+
+            try {
+                const response = await fetch(`https://api.coingecko.com/api/v3/coins/bitcoin/ohlc?vs_currency=usd&days=${days}`);
+                if (!response.ok) {
+                    throw new Error(`Ошибка сети: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.map(item => {
+                    return [item[0], item[1], item[2], item[3], item[4]]; // [timestamp, открытие, максимум, минимум, закрытие]
+                });
+            } catch (error) {
+                console.error("Ошибка при получении данных:", error);
+                return []; // Возвращаем пустой массив в случае ошибки
+            }
+        }
+
+        async function createChart() {
+            if (isLoading) return; // Если идет загрузка, выходим из функции
+            isLoading = true;
+            document.getElementById('loading').style.display = 'block'; // Показываем индикатор загрузки
+
+            const ohlcData = await fetchData(currentTimeframe);
+
+            if (ohlcData.length === 0) {
+                isLoading = false;
+                document.getElementById('loading').style.display = 'none'; // Скрываем индикатор загрузки
+                return; // Если данных нет, выходим
+            }
+
+            // Удаляем старый график, если он существует
+            if (chart) {
+                chart.destroy();
+            }
+
+            const options = {
+                chart: {
+                    type: 'candlestick',
+                    height: 350,
+                    zoom: {
+                        enabled: true,  type: 'x', // Масштабирование по оси X
+                    }
+                },
+                series: [{
+                    data: ohlcData.map(item => {
+                        return {
+                            x: new Date(item[0]),
+                            y: [item[1], item[2], item[3], item[4]]
+                        };
+                    })
+                }],
+                xaxis: {
+                    type: 'datetime',
+                    labels: {
+                        format: 'dd MMM'
+                    },
+                    tooltip: {
+                        format: 'dd MMM yyyy'
+                    }
+                }
+            };
+
+            chart = new ApexCharts(document.querySelector("#chart"), options);
+            await chart.render();
+
+            isLoading = false;
+            document.getElementById('loading').style.display = 'none'; // Скрываем индикатор загрузки
+        }
+
+        function changeTimeframe(timeframe) {
+            currentTimeframe = timeframe; // Устанавливаем выбранный временной промежуток
+            createChart(); // Создаем график с новыми данными
+        }
+
+        createChart(); // Создаем график при загрузке страницы
+    </script>
+</body>
+</html>
+
+
