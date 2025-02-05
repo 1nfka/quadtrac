@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
-        body {
+        body{
             display: flex;
             flex-direction: column;
         }
@@ -25,7 +25,7 @@
             width: 40px;
             margin-right: 5px;
             background-color: black;
-            color: white;
+            color:white;
             border-radius: 20px;
             font-weight: bold;
         }
@@ -42,7 +42,6 @@
         let chart;
         let currentTimeframe = '1d'; // По умолчанию 1 день
         let isLoading = false; // Флаг загрузки
-
         async function fetchData(timeframe) {
             const daysMap = {
                 '1d': '1',
@@ -63,7 +62,6 @@
                 return []; // Возвращаем пустой массив в случае ошибки
             }
         }
-
         async function createChart() {
             if (isLoading) return; // Если идет загрузка, выходим из функции
             isLoading = true;
@@ -82,7 +80,9 @@
                     type: 'candlestick',
                     height: 350,
                     zoom: {
-                        enabled: false // Отключаем масштабирование
+                        enabled: true,
+                        type: 'x', // Масштабирование по оси X
+                        autoScaleYaxis: true // Автоматическое масштабирование по оси Y
                     }
                 },
                 series: [{
@@ -105,17 +105,14 @@
             };
             chart = new ApexCharts(document.querySelector("#chart"), options);
             await chart.render();
-            isLoading = false; // Сбрасываем флаг загрузки
+            isLoading = false;
             document.getElementById('loading').style.display = 'none'; // Скрываем индикатор загрузки
         }
-
         function changeTimeframe(timeframe) {
-            currentTimeframe = timeframe;
-            createChart(); // Пересоздаем график при смене временного интервала
+            currentTimeframe = timeframe; // Устанавливаем выбранный временной промежуток
+            createChart(); // Создаем график с новыми данными
         }
-
-        // Инициализируем график при загрузке страницы
-        createChart();
+        createChart(); // Создаем график при загрузке страницы
     </script>
 </body>
 </html>
